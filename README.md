@@ -4,9 +4,9 @@
 
 ## 新电脑安装
 
-从本仓库下载 `20261109_download_install.bat` 到新电脑后双击，它会联网下载本仓库到 `D:\20261109_p7-control-station` 并启动安装。已有同名目录不会被覆盖。若需要重启，重启后再次双击入口；首次启动 Ubuntu 时按提示创建 Linux 用户名和密码。需要联网、开启虚拟化、Windows winget 及对本仓库的匿名下载权限；私有仓库需另行配置访问方式。Ubuntu 默认安装位置由 WSL 决定，可能占用 C 盘空间。
+从本仓库下载 `20261109_download_install.bat` 到新电脑后双击，它会联网下载本仓库到 `D:\20261109_p7-control-station` 并启动安装。已有非本安装器创建的同名目录不会被覆盖。若需要重启，重启后再次双击入口；再次运行会更新安装脚本并备份原脚本，保留控制代码和配置。首次启动 Ubuntu 时按提示创建 Linux 用户名和密码。需要联网、开启虚拟化及对本仓库的匿名下载权限；私有仓库需另行配置访问方式。Ubuntu 默认安装位置由 WSL 决定，可能占用 C 盘空间。
 
-安装脚本安装 WSL 2、Ubuntu 24.04、USBIPD-WIN、ROS 2 Jazzy 的 ros-base、colcon 和固定版本的厂商 Python SDK，并检查 PCAN 模块；缺少模块时需另行处理。ROS 2 环境会在新打开的 Ubuntu shell 中加载；控制站仍使用项目的 Python 虚拟环境。脚本不安装厂商 ROS 2 手部 SDK 或构建 ROS 工作空间。此安装流程尚未在全新电脑上完整验证。
+安装脚本安装 WSL 2、Ubuntu 24.04、USBIPD-WIN、ROS 2 Jazzy 的 ros-base、colcon 和固定版本的厂商 Python SDK，并检查 PCAN 模块；缺少模块时需另行处理。USBIPD 直接使用经 SHA-256 校验的官方 x64 安装包，不需要 winget。ROS 2 环境会在新打开的 Ubuntu shell 中加载；控制站仍使用项目的 Python 虚拟环境。脚本不安装厂商 ROS 2 手部 SDK 或构建 ROS 工作空间。此安装流程尚未在全新电脑上完整验证。
 
 ## 启动
 

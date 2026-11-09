@@ -7,7 +7,17 @@ try {
         if (-not (Test-Path -LiteralPath (Join-Path $destination '.bootstrap-origin'))) {
             throw "目录 $destination 已存在且不是本安装器创建的目录；为避免覆盖，已停止。"
         }
-        Write-Host '已发现之前下载的项目，继续安装，不覆盖文件。'
+        Write-Host '已发现之前下载的项目。下载最新安装脚本，保留控制代码和配置。'
+        $backup = Join-Path $stagingRoot ([guid]::NewGuid().ToString())
+        New-Item -ItemType Directory -Path $backup -Force | Out-Null
+        foreach ($name in @('20261109_new_pc_setup.ps1','20261109_new_pc_setup.sh','20261109_install_ros2.sh','20261109_start_p7_windows.ps1')) {
+            $target = Join-Path $destination $name
+            $download = Join-Path $backup ($name + '.new')
+            Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/EighteenLiu/p7-control-station/main/$name" -OutFile $download
+            if ((Get-Item -LiteralPath $download).Length -eq 0) { throw "下载 $name 为空，已停止。" }
+            if (Test-Path -LiteralPath $target) { Copy-Item -LiteralPath $target -Destination (Join-Path $backup $name) }
+            Copy-Item -LiteralPath $download -Destination $target -Force
+        }
     } else {
         $staging = Join-Path $stagingRoot ([guid]::NewGuid().ToString())
         New-Item -ItemType Directory -Path $staging -Force | Out-Null

@@ -11,9 +11,6 @@ try {
     if (-not (Test-Path -LiteralPath (Join-Path $project '20261109_p7_control_station.py'))) {
         throw '请先将此安装脚本放在完整项目文件夹中，再双击运行。'
     }
-    if (-not (Get-Command winget.exe -ErrorAction SilentlyContinue)) {
-        throw '未找到 winget。请先从 Microsoft Store 更新“应用安装程序”，然后重新运行。'
-    }
     Write-Host '检查 Windows 虚拟化组件...'
     $restartNeeded = $false
     foreach ($feature in @('Microsoft-Windows-Subsystem-Linux', 'VirtualMachinePlatform')) {
@@ -39,10 +36,29 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'WSL 更新失败，请检查网络后重试。' }
     & wsl.exe --set-default-version 2
     if ($LASTEXITCODE -ne 0) { throw '设置 WSL 2 失败，请检查虚拟化是否启用。' }
-    Write-Host '安装 USBIPD-WIN...'
-    & winget.exe install --id dorssel.usbipd-win --exact --source winget --accept-package-agreements --accept-source-agreements --disable-interactivity
-    if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1978335189) {
-        throw "USBIPD 安装失败，退出码 $LASTEXITCODE。请查看上方输出。"
+    Write-Host '检查 USBIPD-WIN...'
+    $usbipdPath = Join-Path $env:ProgramFiles 'usbipd-win\usbipd.exe'
+    if (-not (Test-Path -LiteralPath $usbipdPath)) {
+        if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') {
+            throw '此安装脚本目前仅支持 x64 Windows。'
+        }
+        $downloadDir = 'D:\20261109_p7_setup'
+        New-Item -ItemType Directory -Force -Path $downloadDir | Out-Null
+        $msi = Join-Path $downloadDir 'usbipd-win_5.3.0_x64.msi'
+        Write-Host '从 USBIPD-WIN 官方发布页下载安装包...'
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -UseBasicParsing 'https://github.com/dorssel/usbipd-win/releases/download/v5.3.0/usbipd-win_5.3.0_x64.msi' -OutFile $msi
+        $expectedHash = '1c984914aec944de19b64eff232421439629699f8138e3ddc29301175bc6d938'
+        if ((Get-FileHash -LiteralPath $msi -Algorithm SHA256).Hash -ne $expectedHash) {
+            throw 'USBIPD 安装包校验失败，请检查网络后重试。'
+        }
+        $process = Start-Process -FilePath msiexec.exe -ArgumentList @('/i', ('"' + $msi + '"'), '/passive', '/norestart') -Wait -PassThru
+        if ($process.ExitCode -eq 3010) {
+            Write-Host 'USBIPD 已安装，请重启电脑后再次双击下载入口。' -ForegroundColor Yellow
+            exit 0
+        }
+        if ($process.ExitCode -ne 0) { throw "USBIPD 安装失败，退出码 $($process.ExitCode)。" }
+        if (-not (Test-Path -LiteralPath $usbipdPath)) { throw '安装结束后未找到 usbipd.exe。' }
     }
     $installed = (& wsl.exe --list --quiet | Out-String) -replace [char]0, ''
     if ($installed -notmatch '(?m)^\s*Ubuntu-24\.04\s*$') {

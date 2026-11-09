@@ -16,6 +16,10 @@ function Get-Devices {
 }
 
 try {
+    $usbipdDefault = Join-Path $env:ProgramFiles 'usbipd-win'
+    if (Test-Path -LiteralPath (Join-Path $usbipdDefault 'usbipd.exe')) {
+        $env:Path = $usbipdDefault + ';' + $env:Path
+    }
     if (-not (Get-Command usbipd.exe -ErrorAction SilentlyContinue)) {
         throw '未找到 usbipd，请先安装 usbipd-win。'
     }
