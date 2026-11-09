@@ -25,7 +25,6 @@ try {
     }
     if ($restartNeeded) {
         Write-Host 'Windows 组件已启用。请手动重启电脑，重启后再次双击本安装脚本。' -ForegroundColor Yellow
-        Read-Host '按回车退出'
         exit 0
     }
     Write-Host '安装或更新 WSL...'
@@ -57,12 +56,17 @@ try {
     & wsl.exe -d $distro -- true
     if ($LASTEXITCODE -ne 0) { throw 'Ubuntu 未初始化，请从开始菜单打开 Ubuntu 24.04 完成初始化后重试。' }
     Write-Host '安装 Ubuntu 系统依赖（需要网络）...'
-    & wsl.exe -d $distro -u root -- bash -c 'apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y git python3-venv python3-tk python3-pip iproute2 can-utils v4l-utils xfonts-wqy fonts-wqy-microhei libgl1 libglib2.0-0 libgomp1'
+    & wsl.exe -d $distro -u root -- bash -c 'apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y git curl ca-certificates python3-venv python3-tk python3-pip iproute2 can-utils v4l-utils xfonts-wqy fonts-wqy-microhei libgl1 libglib2.0-0 libgomp1'
     if ($LASTEXITCODE -ne 0) { throw 'Ubuntu 系统依赖安装失败，请查看上方输出并重试。' }
     $quoted = '"' + $project + '"'
+    Write-Host '安装 ROS 2 Jazzy（首次下载可能较久）...'
+    & wsl.exe -d $distro -u root --cd $quoted -- bash ./20261109_install_ros2.sh
+    if ($LASTEXITCODE -ne 0) { throw 'ROS 2 安装失败，请查看上方输出并重试。' }
     Write-Host '创建项目 Python 环境并下载安装 SDK...'
     & wsl.exe -d $distro --cd $quoted -- bash ./20261109_new_pc_setup.sh
     if ($LASTEXITCODE -ne 0) { throw 'Python 环境安装失败，请查看上方输出并重试。' }
+    & wsl.exe -d $distro -- bash -c 'grep -Fqx "source /opt/ros/jazzy/setup.bash" ~/.bashrc || printf "\\nsource /opt/ros/jazzy/setup.bash\\n" >> ~/.bashrc'
+    if ($LASTEXITCODE -ne 0) { throw '配置 ROS 2 环境失败。' }
     Write-Host '检查 PCAN 内核模块...'
     & wsl.exe -d $distro -- bash -c 'modinfo peak_usb >/dev/null 2>&1'
     if ($LASTEXITCODE -ne 0) {
