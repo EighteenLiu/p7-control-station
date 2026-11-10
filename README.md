@@ -8,6 +8,8 @@
 
 安装脚本安装 WSL 2、Ubuntu 24.04、USBIPD-WIN、ROS 2 Jazzy 的 ros-base、colcon 和固定版本的厂商 Python SDK，并检查 PCAN 模块；缺少模块时需另行处理。USBIPD 直接使用经 SHA-256 校验的官方 x64 安装包，不需要 winget。ROS 2 环境会在新打开的 Ubuntu shell 中加载；控制站仍使用项目的 Python 虚拟环境。脚本不安装厂商 ROS 2 手部 SDK 或构建 ROS 工作空间。此安装流程尚未在全新电脑上完整验证。
 
+USBIPD 安装失败时，脚本会继续尝试配置 Ubuntu 和 SDK，并在最后报告未完成的 USBIPD 步骤。WSL 本身不可用时仍需先修复 Windows 功能。启动时若未找到 USBIPD，但 WSL 中已存在四个 CAN 接口，则直接尝试启动；相机也须已通过其他方式接入 WSL。仅安装环境不会自动把 USB 设备接入 WSL。
+
 ## 启动
 
 连接四个 PCAN 及三个 Orbbec 后，双击 `20261109_start_p7_windows.bat`。脚本查找并转发设备，并可能请求管理员授权或 Ubuntu sudo 密码。打开界面后点击“识别设备”，再分别连接机械臂和手。设备的物理左右关系需在现场确认。

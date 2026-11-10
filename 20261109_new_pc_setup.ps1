@@ -1,6 +1,7 @@
 ﻿$ErrorActionPreference = 'Stop'
 $distro = 'Ubuntu-24.04'
 $project = $PSScriptRoot
+$usbipdError = $null
 try {
     $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -36,6 +37,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'WSL 更新失败，请检查网络后重试。' }
     & wsl.exe --set-default-version 2
     if ($LASTEXITCODE -ne 0) { throw '设置 WSL 2 失败，请检查虚拟化是否启用。' }
+    try {
     Write-Host '检查 USBIPD-WIN...'
     $usbipdPath = Join-Path $env:ProgramFiles 'usbipd-win\usbipd.exe'
     if (-not (Test-Path -LiteralPath $usbipdPath)) {
@@ -59,6 +61,10 @@ try {
         }
         if ($process.ExitCode -ne 0) { throw "USBIPD 安装失败，退出码 $($process.ExitCode)。" }
         if (-not (Test-Path -LiteralPath $usbipdPath)) { throw '安装结束后未找到 usbipd.exe。' }
+    }
+    } catch {
+        $usbipdError = $_.Exception.Message
+        Write-Host "USBIPD 安装未完成：$usbipdError。继续配置 Ubuntu；连接 USB 设备前仍需解决。" -ForegroundColor Yellow
     }
     $installed = (& wsl.exe --list --quiet | Out-String) -replace [char]0, ''
     if ($installed -notmatch '(?m)^\s*Ubuntu-24\.04\s*$') {
@@ -87,6 +93,11 @@ try {
     & wsl.exe -d $distro -- bash -c 'modinfo peak_usb >/dev/null 2>&1'
     if ($LASTEXITCODE -ne 0) {
         Write-Host '未找到 peak_usb 模块：安装尚不能用于 PCAN，请联系我提供该电脑的 WSL 内核信息。' -ForegroundColor Yellow
+        exit 2
+    }
+    if ($usbipdError) {
+        Write-Host "Ubuntu 环境已配置，但 USBIPD 未安装：$usbipdError" -ForegroundColor Yellow
+        Write-Host '要控制 USB 设备，请修复 USBIPD 安装，或先用其他方式将设备转发至 WSL。' -ForegroundColor Yellow
         exit 2
     }
     Write-Host '基础环境安装完成。重新打开本文件夹后双击 20261109_start_p7_windows.bat 启动。' -ForegroundColor Green

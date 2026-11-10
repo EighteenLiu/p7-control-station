@@ -21,7 +21,16 @@ try {
         $env:Path = $usbipdDefault + ';' + $env:Path
     }
     if (-not (Get-Command usbipd.exe -ErrorAction SilentlyContinue)) {
-        throw '未找到 usbipd，请先安装 usbipd-win。'
+        Write-Host '未找到 USBIPD，检查 WSL 中是否已有四个 CAN 接口...'
+        & wsl.exe -d $distribution -- bash -c 'for i in 0 1 2 3; do test -e /sys/class/net/can$i || exit 1; done'
+        if ($LASTEXITCODE -ne 0) {
+            throw '未找到 USBIPD，WSL 中也没有四个 CAN 接口。请运行安装脚本安装 USBIPD，或先通过其他 USB 转发方式接入 WSL。'
+        }
+        Write-Host 'WSL 中已有四个 CAN 接口，跳过 USBIPD 转发；相机也须已接入 WSL。'
+        $quotedDirectory = '"' + $PSScriptRoot + '"'
+        & wsl.exe -d $distribution --cd $quotedDirectory -- bash ./20261109_start_p7.sh
+        if ($LASTEXITCODE -ne 0) { throw "控制站退出，退出码 $LASTEXITCODE。" }
+        exit 0
     }
     if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot '20261109_start_p7.sh'))) {
         throw '未找到 WSL 启动脚本，请将此脚本放回项目文件夹。'
