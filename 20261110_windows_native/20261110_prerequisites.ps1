@@ -18,16 +18,17 @@ try {
             throw "签名检查失败：$path；状态：$($sig.Status)"
         }
     }
-    $py = Get-Command py.exe -ErrorAction SilentlyContinue
     $pythonOk = $false
-    if ($py) {
-        $previousPreference = $ErrorActionPreference
-        try {
-            $ErrorActionPreference = 'Continue'
-            $process = Start-Process -FilePath $py.Source -ArgumentList @('-3.12','-c','"import struct,sys;sys.exit(0 if struct.calcsize(''P'')==8 else 1)"') -WindowStyle Hidden -Wait -PassThru
+    $pythonPath = 'D:\20261110_Python312\python.exe'
+    if (Test-Path -LiteralPath $pythonPath) {
+        $process = Start-Process -FilePath $pythonPath -ArgumentList @('-c','"import sys,struct;sys.exit(0 if sys.version_info[:2]==(3,12) and struct.calcsize(''P'')==8 else 1)"') -WindowStyle Hidden -Wait -PassThru
+        $pythonOk = $process.ExitCode -eq 0
+        if (-not $pythonOk) { throw "已有的 $pythonPath 不是可用的 64 位 Python 3.12，请检查该目录。" }
+    } else {
+        $py = Get-Command py.exe -ErrorAction SilentlyContinue
+        if ($py) {
+            $process = Start-Process -FilePath $py.Source -ArgumentList @('-3.12-64','--version') -WindowStyle Hidden -Wait -PassThru
             $pythonOk = $process.ExitCode -eq 0
-        } finally {
-            $ErrorActionPreference = $previousPreference
         }
     }
     if (-not $pythonOk) {
@@ -37,6 +38,7 @@ try {
         Assert-Signed $installer 'Python Software Foundation'
         $p = Start-Process -FilePath $installer -ArgumentList @('/passive','InstallAllUsers=1','PrependPath=1','Include_launcher=1','Include_pip=1','TargetDir=D:\20261110_Python312') -Wait -PassThru
         if ($p.ExitCode -ne 0) { throw "Python 安装退出码：$($p.ExitCode)" }
+        if (-not (Test-Path -LiteralPath $pythonPath)) { throw "Python 安装后未找到 $pythonPath；请查看 Python 安装日志。" }
     }
     $env:Path = 'D:\20261110_Python312;D:\20261110_Python312\Scripts;' + $env:ProgramFiles + '\Git\cmd;' + $env:Path
     if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) {

@@ -4,6 +4,14 @@ set "PATH=D:\20261110_Python312;D:\20261110_Python312\Scripts;D:\20261110_Git\cm
 set "TEMP=D:\20261110_p7_download"
 set "TMP=D:\20261110_p7_download"
 if not exist "%TEMP%" mkdir "%TEMP%"
+if not exist "D:\20261110_Python312\python.exe" (
+  py -3.12-64 --version >nul 2>&1
+  if errorlevel 1 (
+    echo Python 3.12 64-bit was not found. Run 20261110_prerequisites.bat and finish the installation first.
+    pause
+    exit /b 1
+  )
+)
 if not exist ".venv\Scripts\python.exe" (
   if exist "D:\20261110_Python312\python.exe" (
     "D:\20261110_Python312\python.exe" -m venv .venv
