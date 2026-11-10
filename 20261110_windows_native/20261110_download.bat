@@ -21,4 +21,4 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-call "%DEST%\20261110_setup.bat"
+call "%DEST%\20261110_prerequisites.bat"

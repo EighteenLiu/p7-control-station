@@ -1,5 +1,9 @@
 @echo off
 cd /d "%~dp0"
+set "PATH=D:\20261110_Python312;D:\20261110_Python312\Scripts;D:\20261110_Git\cmd;%ProgramFiles%\Git\cmd;%PATH%"
+set "TEMP=D:\20261110_p7_download"
+set "TMP=D:\20261110_p7_download"
+if not exist "%TEMP%" mkdir "%TEMP%"
 if not exist ".venv\Scripts\python.exe" (
   py -3.12 -m venv .venv
   if errorlevel 1 goto fail

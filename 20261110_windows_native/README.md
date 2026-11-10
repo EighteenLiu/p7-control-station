@@ -1,9 +1,9 @@
 # Windows 原生测试版
 
-这是独立的 Windows 实验版本，不使用 WSL 或 USBIPD。先安装 64 位 Python 3.12（含 py 启动器）、Git、PEAK 官方 PCAN 驱动和 PCAN-Basic。在新电脑下载并双击 20261110_download.bat，它从 GitHub 下载文件到 D 盘并启动安装；已有目标目录不会被覆盖。也可自行复制此目录后双击 20261110_setup.bat。安装结束后双击 20261110_probe.bat 检查 PCAN 只读响应，或双击 20261110_start.bat 打开前端。
+这是独立的 Windows 实验版本，不使用 WSL 或 USBIPD。在新电脑下载并双击 20261110_download.bat，它从 GitHub 下载文件到 D 盘；已有目标目录不会被覆盖。先双击 20261110_prerequisites.bat，授权管理员权限，脚本会下载 Python、Git 和 PEAK 官方包并验证签名，PCAN 驱动需要按向导安装；完成或重启后双击 20261110_setup.bat 安装 Python 依赖。最后双击 20261110_probe.bat 检查 PCAN 只读响应，或双击 20261110_start.bat 打开前端。
 
 相机使用 DirectShow 索引，20261110_camera_indices.json 默认是 [0,1,2]。索引可能随插拔变化，可能包含电脑自带摄像头或深度流，必须现场核对并修改；此版本尚未通过序列号区分三台 Orbbec。
 
 机械臂连接、使能、滑块和归零在此测试版禁用，不能进行运动；手部控制代码已切换 PCAN，但尚未实机验证。连接手前须确认物理左右并现场监护。前端的“停止”不能替代急停。原 WSL 控制站保持独立。
 
-厂商 SDK 和相机驱动在新电脑的安装、四路 PCAN 识别、双手和三路画面尚需实机验证。驱动和 PCAN-Basic 需从 PEAK 官方渠道安装，本安装脚本不会自动安装它们。
+厂商 SDK 和相机驱动在新电脑的安装、四路 PCAN 识别、双手和三路画面尚需实机验证。PEAK 驱动使用官方安装向导，PCAN-Basic 64 位 DLL 放在本目录，不保证驱动已正确识别设备。
