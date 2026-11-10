@@ -21,8 +21,14 @@ try {
     $py = Get-Command py.exe -ErrorAction SilentlyContinue
     $pythonOk = $false
     if ($py) {
-        & $py.Source -3.12 -c 'import struct,sys; sys.exit(0 if struct.calcsize("P")==8 else 1)' 2>$null
-        $pythonOk = $LASTEXITCODE -eq 0
+        $previousPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            $process = Start-Process -FilePath $py.Source -ArgumentList @('-3.12','-c','"import struct,sys;sys.exit(0 if struct.calcsize(''P'')==8 else 1)"') -WindowStyle Hidden -Wait -PassThru
+            $pythonOk = $process.ExitCode -eq 0
+        } finally {
+            $ErrorActionPreference = $previousPreference
+        }
     }
     if (-not $pythonOk) {
         Write-Host '下载并安装 Python 3.12...'
