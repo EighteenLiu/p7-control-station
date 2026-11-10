@@ -18,6 +18,7 @@ try {
             throw "签名检查失败：$path；状态：$($sig.Status)"
         }
     }
+    Write-Host '[1/4] 检查 Python 3.12（已安装会跳过）...'
     $pythonOk = $false
     $pythonPath = 'D:\20261110_Python312\python.exe'
     if (Test-Path -LiteralPath $pythonPath) {
@@ -32,7 +33,7 @@ try {
         }
     }
     if (-not $pythonOk) {
-        Write-Host '下载并安装 Python 3.12...'
+        Write-Host '正在下载 Python 3.12，完成后将等待安装程序退出，请勿关闭窗口...'
         $installer = Join-Path $work 'python-3.12.10-amd64.exe'
         Invoke-WebRequest -UseBasicParsing 'https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe' -OutFile $installer
         Assert-Signed $installer 'Python Software Foundation'
@@ -40,7 +41,9 @@ try {
         if ($p.ExitCode -ne 0) { throw "Python 安装退出码：$($p.ExitCode)" }
         if (-not (Test-Path -LiteralPath $pythonPath)) { throw "Python 安装后未找到 $pythonPath；请查看 Python 安装日志。" }
     }
-    $env:Path = 'D:\20261110_Python312;D:\20261110_Python312\Scripts;' + $env:ProgramFiles + '\Git\cmd;' + $env:Path
+    Write-Host '[1/4] Python 检查完成。'
+    Write-Host '[2/4] 检查 Git（已安装会跳过）...'
+    $env:Path = 'D:\20261110_Python312;D:\20261110_Python312\Scripts;D:\20261110_Git\cmd;' + $env:ProgramFiles + '\Git\cmd;' + $env:Path
     if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) {
         Write-Host '从 Git for Windows 官方发布页下载 Git...'
         $release = Invoke-RestMethod -Headers @{'User-Agent'='P7-Installer'} 'https://api.github.com/repos/git-for-windows/git/releases/latest'
@@ -49,12 +52,14 @@ try {
         $installer = Join-Path $work 'git-setup.exe'
         Invoke-WebRequest -UseBasicParsing $asset[0].browser_download_url -OutFile $installer
         Assert-Signed $installer 'Git for Windows|Johannes Schindelin'
+        Write-Host 'Git 已下载，正在安装；安装过程可能暂时没有输出，请勿关闭窗口...'
         $p = Start-Process -FilePath $installer -ArgumentList @('/VERYSILENT','/NORESTART','/DIR=D:\20261110_Git') -Wait -PassThru
         if ($p.ExitCode -ne 0) { throw "Git 安装退出码：$($p.ExitCode)" }
     }
     $env:Path = 'D:\20261110_Git\cmd;' + $env:Path
     if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) { throw '未找到 Git，请检查安装结果。' }
-    Write-Host '下载 PEAK 官方驱动和 PCAN-Basic...'
+    Write-Host '[2/4] Git 检查完成。'
+    Write-Host '[3/4] 下载 PEAK 官方驱动和 PCAN-Basic...'
     $driverZip = Join-Path $work 'peak-driver.zip'
     $basicZip = Join-Path $work 'pcan-basic.zip'
     Invoke-WebRequest -UseBasicParsing 'https://www.peak-system.com/quick/DrvSetup' -OutFile $driverZip
@@ -68,7 +73,7 @@ try {
     Assert-Signed $driver 'PEAK.*System'
     Assert-Signed $dll 'PEAK.*System'
     Copy-Item -LiteralPath $dll -Destination (Join-Path $PSScriptRoot 'PCANBasic.dll') -Force
-    Write-Host '即将打开 PEAK 驱动安装向导，请按照向导完成安装。'
+    Write-Host '[4/4] 即将打开 PEAK 驱动安装向导，请切换到向导窗口完成安装；本窗口会等待。'
     $p = Start-Process -FilePath $driver -Wait -PassThru
     if ($p.ExitCode -ne 0) { throw "PEAK 驱动安装程序退出码：$($p.ExitCode)。请确认已完成向导。" }
     Write-Host '前置安装程序已运行完成。请重新打开本目录，双击 20261110_setup.bat 安装 Python 依赖。'
